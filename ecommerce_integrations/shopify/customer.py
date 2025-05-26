@@ -68,6 +68,24 @@ class ShopifyCustomer(EcommerceCustomer):
         if shipping_address:
             self._update_existing_address(customer_name, shipping_address, "Shipping", email)
 
+    # def _update_existing_address(
+    # 	self,
+    # 	customer_name,
+    # 	shopify_address: Dict[str, Any],
+    # 	address_type: str = "Billing",
+    # 	email: Optional[str] = None,
+    # ) -> None:
+    # 	old_address = self.get_customer_address_doc(address_type)
+
+    # 	if not old_address:
+    # 		self.create_customer_address(customer_name, shopify_address, address_type, email)
+    # 	else:
+    # 		exclude_in_update = ["address_title", "address_type"]
+    # 		new_values = _map_address_fields(shopify_address, customer_name, address_type, email)
+    # 		old_address.update({k: v for k, v in new_values.items() if k not in exclude_in_update})
+    # 		old_address.flags.ignore_mandatory = True
+    # 		old_address.save()
+
     def _update_existing_address(
         self,
         customer_name,
@@ -80,49 +98,12 @@ class ShopifyCustomer(EcommerceCustomer):
         if not old_address:
             self.create_customer_address(customer_name, shopify_address, address_type, email)
         else:
-            try:
-                exclude_in_update = ["address_title", "address_type"]
-                new_values = _map_address_fields(
-                    shopify_address, customer_name, address_type, email
-                )
-
-                for k, v in new_values.items():
-                    if k not in exclude_in_update:
-                        setattr(old_address, k, v)
-
-                old_address.flags.ignore_mandatory = True
-                old_address.save()
-
-            except frappe.exceptions.TimestampMismatchError:
-                old_address.reload()
-
-                for k, v in new_values.items():
-                    if k not in exclude_in_update:
-                        setattr(old_address, k, v)
-                old_address.flags.ignore_mandatory = True
-                old_address.save()
-
-    # def _update_existing_address(
-    #     self,
-    #     customer_name,
-    #     shopify_address: Dict[str, Any],
-    #     address_type: str = "Billing",
-    #     email: Optional[str] = None,
-    # ) -> None:
-    #     old_address = self.get_customer_address_doc(address_type)
-
-    #     if not old_address:
-    #         self.create_customer_address(customer_name, shopify_address, address_type, email)
-    #     else:
-    #         exclude_in_update = ["address_title", "address_type"]
-    #         new_values = _map_address_fields(shopify_address, customer_name, address_type, email)
-
-    #         for k, v in new_values.items():
-    #             if k not in exclude_in_update:
-    #                 setattr(old_address, k, v)
-
-    #         old_address.flags.ignore_mandatory = True
-    #         old_address.save()
+            exclude_in_update = ["address_title", "address_type"]
+            new_values = _map_address_fields(shopify_address, customer_name, address_type, email)
+            for k, v in new_values.items():
+                if k not in exclude_in_update:
+                    setattr(old_address, k, v)
+            old_address.db_update()
 
     def create_customer_contact(self, shopify_customer: Dict[str, Any]) -> None:
 
