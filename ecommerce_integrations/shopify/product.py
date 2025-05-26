@@ -217,14 +217,26 @@ class ShopifyProduct:
 
 			if supplier:
 				return product_dict.get("vendor")
-			supplier = frappe.get_doc(
-				{
-					"doctype": "Supplier",
-					"supplier_name": product_dict.get("vendor"),
-					SUPPLIER_ID_FIELD: product_dict.get("vendor").lower(),
-					"supplier_group": self._get_supplier_group(),
-				}
-			).insert()
+
+
+			supplier = frappe.new_doc("Supplier")
+			supplier.supplier_name = product_dict.get("vendor")
+			supplier.supplier_group = self._get_supplier_group()
+			setattr(supplier, SUPPLIER_ID_FIELD, product_dict.get("vendor").lower())
+			
+			supplier.flags.ignore_permissions = True
+			supplier.flags.ignore_mandatory = True
+			supplier.save()
+			
+
+			# supplier = frappe.get_doc(
+			# 	{
+			# 		"doctype": "Supplier",
+			# 		"supplier_name": product_dict.get("vendor"),
+			# 		SUPPLIER_ID_FIELD: product_dict.get("vendor").lower(),
+			# 		"supplier_group": self._get_supplier_group(),
+			# 	}
+			# ).insert()
 			return supplier.name
 		else:
 			return ""
