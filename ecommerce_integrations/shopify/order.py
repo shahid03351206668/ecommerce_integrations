@@ -29,6 +29,7 @@ DEFAULT_TAX_FIELDS = {
 }
 
 
+@frappe.whitelist()
 def sync_sales_order(payload, request_id=None):
     order = payload
     frappe.set_user("Administrator")
