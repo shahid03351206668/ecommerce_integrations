@@ -29,7 +29,278 @@ DEFAULT_TAX_FIELDS = {
 }
 
 
-def sync_sales_order(payload, request_id=None):
+def sync_sales_order(
+    payload={
+        "admin_graphql_api_id": "gid://shopify/Order/11762964267382",
+        "app_id": 1354745,
+        "billing_address": {
+            "address1": "Bahnhofstrasse 77",
+            "address2": None,
+            "city": "Wohlen AG",
+            "company": "hostettler ag",
+            "country": "Switzerland",
+            "country_code": "CH",
+            "first_name": "Stephan",
+            "last_name": "Kueng 456",
+            "latitude": 47.3485933,
+            "longitude": 8.270506899999999,
+            "name": "Stephan Kueng 456",
+            "phone": None,
+            "province": None,
+            "province_code": None,
+            "zip": "5610",
+        },
+        "browser_ip": "119.73.96.27",
+        "buyer_accepts_marketing": True,
+        "cancel_reason": None,
+        "cancelled_at": None,
+        "cart_token": None,
+        "checkout_id": 65312384909686,
+        "checkout_token": "3b023a3bd83f21fb27767a1575b42d6f",
+        "client_details": {
+            "accept_language": None,
+            "browser_height": None,
+            "browser_ip": "119.73.96.27",
+            "browser_width": None,
+            "session_hash": None,
+            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+        },
+        "closed_at": None,
+        "confirmation_number": "KG2MNWL86",
+        "confirmed": True,
+        "contact_email": "sonoskueng@gmail.com",
+        "created_at": "2025-05-26T16:31:57+02:00",
+        "currency": "CHF",
+        "current_shipping_price_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "current_subtotal_price": "4.00",
+        "current_subtotal_price_set": {
+            "presentment_money": {"amount": "4.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "4.00", "currency_code": "CHF"},
+        },
+        "current_total_additional_fees_set": None,
+        "current_total_discounts": "0.00",
+        "current_total_discounts_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "current_total_duties_set": None,
+        "current_total_price": "4.00",
+        "current_total_price_set": {
+            "presentment_money": {"amount": "4.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "4.00", "currency_code": "CHF"},
+        },
+        "current_total_tax": "0.10",
+        "current_total_tax_set": {
+            "presentment_money": {"amount": "0.10", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.10", "currency_code": "CHF"},
+        },
+        "customer": {
+            "admin_graphql_api_id": "gid://shopify/Customer/23365970493814",
+            "created_at": "2025-05-23T09:53:34+02:00",
+            "currency": "CHF",
+            "default_address": {
+                "address1": "Bahnhofstrasse 77",
+                "address2": None,
+                "city": "Wohlen AG",
+                "company": "hostettler ag",
+                "country": "Switzerland",
+                "country_code": "CH",
+                "country_name": "Switzerland",
+                "customer_id": 23365970493814,
+                "default": True,
+                "first_name": "Stephan",
+                "id": 34769390043510,
+                "last_name": "Kueng 456",
+                "name": "Stephan Kueng 456",
+                "phone": None,
+                "province": None,
+                "province_code": None,
+                "zip": "5610",
+            },
+            "email": "sonoskueng@gmail.com",
+            "first_name": "Stephan",
+            "id": 23365970493814,
+            "last_name": "Kueng 4567",
+            "multipass_identifier": None,
+            "note": None,
+            "phone": None,
+            "state": "enabled",
+            "tax_exempt": False,
+            "tax_exemptions": [],
+            "updated_at": "2025-05-26T16:31:58+02:00",
+            "verified_email": True,
+        },
+        "customer_locale": "de-CH",
+        "device_id": None,
+        "discount_applications": [],
+        "discount_codes": [],
+        "duties_included": False,
+        "email": "sonoskueng@gmail.com",
+        "estimated_taxes": False,
+        "financial_status": "paid",
+        "fulfillment_status": None,
+        "fulfillments": [],
+        "id": 11762964267382,
+        "landing_site": None,
+        "landing_site_ref": None,
+        "line_items": [
+            {
+                "admin_graphql_api_id": "gid://shopify/LineItem/34967897932150",
+                "attributed_staffs": [],
+                "current_quantity": 4,
+                "discount_allocations": [],
+                "duties": [],
+                "fulfillable_quantity": 4,
+                "fulfillment_service": "manual",
+                "fulfillment_status": None,
+                "gift_card": False,
+                "grams": 0,
+                "id": 34967897932150,
+                "name": "Testprodukt Flugzeug B",
+                "price": "1.00",
+                "price_set": {
+                    "presentment_money": {"amount": "1.00", "currency_code": "CHF"},
+                    "shop_money": {"amount": "1.00", "currency_code": "CHF"},
+                },
+                "product_exists": True,
+                "product_id": 15179691164022,
+                "properties": [],
+                "quantity": 4,
+                "requires_shipping": True,
+                "sales_line_item_group_id": None,
+                "sku": "123",
+                "tax_lines": [
+                    {
+                        "channel_liable": False,
+                        "price": "0.10",
+                        "price_set": {
+                            "presentment_money": {"amount": "0.10", "currency_code": "CHF"},
+                            "shop_money": {"amount": "0.10", "currency_code": "CHF"},
+                        },
+                        "rate": 0.026,
+                        "title": "MwSt",
+                    }
+                ],
+                "taxable": True,
+                "title": "Testprodukt Flugzeug B",
+                "total_discount": "0.00",
+                "total_discount_set": {
+                    "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+                    "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+                },
+                "variant_id": 55614318313846,
+                "variant_inventory_management": "shopify",
+                "variant_title": None,
+                "vendor": "Virima AG",
+            }
+        ],
+        "location_id": None,
+        "merchant_business_entity_id": "MTkxNTk5Mjc0MzU4",
+        "merchant_of_record_app_id": None,
+        "name": "#1027",
+        "note": None,
+        "note_attributes": [],
+        "number": 27,
+        "order_number": 1027,
+        "order_status_url": "https://virima.ch/91599274358/orders/d72bc6995ee387a3cb5637318a56aefe/authenticate?key=362c9ad8a1cda4648879716b8a618312",
+        "original_total_additional_fees_set": None,
+        "original_total_duties_set": None,
+        "payment_gateway_names": ["manual"],
+        "payment_terms": None,
+        "phone": None,
+        "po_number": None,
+        "presentment_currency": "CHF",
+        "processed_at": "2025-05-26T16:31:57+02:00",
+        "reference": None,
+        "referring_site": None,
+        "refunds": [],
+        "returns": [],
+        "shipping_address": {
+            "address1": "Bahnhofstrasse 77",
+            "address2": None,
+            "city": "Wohlen AG",
+            "company": "hostettler ag",
+            "country": "Switzerland",
+            "country_code": "CH",
+            "first_name": "Stephan",
+            "last_name": "Kueng 456",
+            "latitude": 47.3485933,
+            "longitude": 8.270506899999999,
+            "name": "Stephan Kueng 456",
+            "phone": None,
+            "province": None,
+            "province_code": None,
+            "zip": "5610",
+        },
+        "shipping_lines": [],
+        "source_identifier": None,
+        "source_name": "shopify_draft_order",
+        "source_url": None,
+        "subtotal_price": "4.00",
+        "subtotal_price_set": {
+            "presentment_money": {"amount": "4.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "4.00", "currency_code": "CHF"},
+        },
+        "tags": "",
+        "tax_exempt": False,
+        "tax_lines": [
+            {
+                "channel_liable": False,
+                "price": "0.10",
+                "price_set": {
+                    "presentment_money": {"amount": "0.10", "currency_code": "CHF"},
+                    "shop_money": {"amount": "0.10", "currency_code": "CHF"},
+                },
+                "rate": 0.026,
+                "title": "MwSt",
+            }
+        ],
+        "taxes_included": True,
+        "test": False,
+        "token": "d72bc6995ee387a3cb5637318a56aefe",
+        "total_cash_rounding_payment_adjustment_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "total_cash_rounding_refund_adjustment_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "total_discounts": "0.00",
+        "total_discounts_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "total_line_items_price": "4.00",
+        "total_line_items_price_set": {
+            "presentment_money": {"amount": "4.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "4.00", "currency_code": "CHF"},
+        },
+        "total_outstanding": "0.00",
+        "total_price": "4.00",
+        "total_price_set": {
+            "presentment_money": {"amount": "4.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "4.00", "currency_code": "CHF"},
+        },
+        "total_shipping_price_set": {
+            "presentment_money": {"amount": "0.00", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.00", "currency_code": "CHF"},
+        },
+        "total_tax": "0.10",
+        "total_tax_set": {
+            "presentment_money": {"amount": "0.10", "currency_code": "CHF"},
+            "shop_money": {"amount": "0.10", "currency_code": "CHF"},
+        },
+        "total_tip_received": "0.00",
+        "total_weight": 0,
+        "updated_at": "2025-05-26T16:31:58+02:00",
+        "user_id": 130240610678,
+    },
+    request_id=None,
+):
     order = payload
     frappe.set_user("Administrator")
     frappe.flags.request_id = request_id
@@ -64,8 +335,13 @@ def create_order(order, setting, company=None):
     # from ecommerce_integrations.shopify.fulfillment import create_delivery_note
     # from ecommerce_integrations.shopify.invoice import create_sales_invoice
 
-    create_sales_order(order, setting, company)
-    # if so:
+    so = create_sales_order(order, setting, company)
+    if so:
+        frappe.log_error(
+            "sales order created successfully from shopify order id %s  erp id %s"
+            % (so.name, so.get(ORDER_ID_FIELD))
+        )
+    frappe.db.commit()
     #     if order.get("financial_status") == "paid":
     #         create_sales_invoice(order, setting, so)
 
@@ -126,13 +402,12 @@ def create_sales_order(shopify_order, setting, company=None):
         so.flags.shopiy_order_json = json.dumps(shopify_order)
         so.save(ignore_permissions=True)
         so.submit()
-
         if shopify_order.get("note"):
             so.add_comment(text=f"Order Note: {shopify_order.get('note')}")
-
     else:
         so = frappe.get_doc("Sales Order", so)
 
+    frappe.db.commit()
     return so
 
 
