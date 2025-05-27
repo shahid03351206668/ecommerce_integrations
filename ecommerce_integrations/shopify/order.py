@@ -62,8 +62,8 @@ def sync_sales_order(payload, request_id=None):
 
 def create_order(order, setting, company=None):
     # local import to avoid circular dependencies
-    from ecommerce_integrations.shopify.fulfillment import create_delivery_note
-    from ecommerce_integrations.shopify.invoice import create_sales_invoice
+    # from ecommerce_integrations.shopify.fulfillment import create_delivery_note
+    # from ecommerce_integrations.shopify.invoice import create_sales_invoice
 
     so = create_sales_order(order, setting, company)
     if so:
@@ -71,13 +71,14 @@ def create_order(order, setting, company=None):
             "sales order created successfully from shopify order id %s  erp id %s"
             % (so.name, so.get(ORDER_ID_FIELD))
         )
-        if order.get("financial_status") == "paid":
-            create_sales_invoice(order, setting, so)
 
-        if order.get("fulfillments"):
-            create_delivery_note(order, setting, so)
+        # if order.get("financial_status") == "paid":
+        #     create_sales_invoice(order, setting, so)
 
-        frappe.db.commit()
+        # if order.get("fulfillments"):
+        #     create_delivery_note(order, setting, so)
+
+        # frappe.db.commit()
 
 
 def create_sales_order(shopify_order, setting, company=None):
