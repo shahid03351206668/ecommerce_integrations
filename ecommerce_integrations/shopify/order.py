@@ -136,6 +136,7 @@ def update_warehouse_address(so, shopify_order):
 
         if validate_pickup_location(code):
             so.shipping_address_name = ""
+            so.shipping_address = "Abholung"
             # stock_settings = frappe.get_doc("Stock Settings", "Stock Settings")
 
             # if stock_settings.get("default_warehouse"):
