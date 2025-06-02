@@ -136,23 +136,23 @@ def update_warehouse_address(so, shopify_order):
 
         if validate_pickup_location(code):
             so.shipping_address_name = ""
-            stock_settings = frappe.get_doc("Stock Settings", "Stock Settings")
+            # stock_settings = frappe.get_doc("Stock Settings", "Stock Settings")
 
-            if stock_settings.get("default_warehouse"):
-                warehouse_address = frappe.db.get_value(
-                    "Dynamic Link",
-                    {
-                        "parenttype": "Address",
-                        "link_doctype": "Warehouse",
-                        "link_name": stock_settings.get("default_warehouse"),
-                    },
-                    "parent",
-                )
-                frappe.log_error(
-                    f"Warehouse address not found {warehouse_address}",
-                )
-                if warehouse_address:
-                    so.shipping_address_name = warehouse_address
+            # if stock_settings.get("default_warehouse"):
+            #     warehouse_address = frappe.db.get_value(
+            #         "Dynamic Link",
+            #         {
+            #             "parenttype": "Address",
+            #             "link_doctype": "Warehouse",
+            #             "link_name": stock_settings.get("default_warehouse"),
+            #         },
+            #         "parent",
+            #     )
+            #     frappe.log_error(
+            #         f"Warehouse address not found {warehouse_address}",
+            #     )
+            #     if warehouse_address:
+            #         so.shipping_address_name = warehouse_address
 
 
 def create_sales_order(shopify_order, setting, company=None):
