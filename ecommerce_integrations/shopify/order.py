@@ -72,17 +72,88 @@ def create_order(order, setting, company=None):
             % (so.name, so.get(ORDER_ID_FIELD))
         )
 
-        # if order.get("financial_status") == "paid":
-        #     create_sales_invoice(order, setting, so)
+        """
+        if order.get("financial_status") == "paid":
+            create_sales_invoice(order, setting, so)
+        if order.get("fulfillments"):
+            create_delivery_note(order, setting, so)
+        frappe.db.commit()
 
-        # if order.get("fulfillments"):
-        #     create_delivery_note(order, setting, so)
+        """
 
-        # frappe.db.commit()
+
+def get_pickup_locations():
+    import requests
+
+    query = """
+    query {
+        locations(first: 10) {
+            edges {
+                node {
+                    id
+                    name
+                    address {
+                        formatted
+                    }
+                }
+            }
+        }
+    }
+    """
+    settings = frappe.get_doc("Shopify Setting", "Shopify Setting")
+
+    payload = {"query": query}
+    headers = {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": settings.get_password("password"),
+    }
+
+    response = requests.post(f"https://{settings.shopify_url}", headers=headers, json=payload)
+    frappe.log_error("location api response", frappe.utils.cstr(response.text))
+
+    if response.status_code == 200:
+        locations = response.json().get("data", {}).get("locations", {}).get("edges", [])
+        return [i.get("node", {}).get("name") for i in locations]
+    else:
+        return []
+
+
+def update_warehouse_address(so, shopify_order):
+
+    def validate_pickup_location(code):
+        if code in get_pickup_locations():
+            return True
+        return False
+
+    shipping_lines = shopify_order.get("shipping_lines")
+
+    for i in shipping_lines:
+        code = i.get("code")
+
+        if validate_pickup_location(code):
+            so.shipping_address_name = ""
+            stock_settings = frappe.get_doc("Stock Settings", "Stock Settings")
+
+            if stock_settings.get("default_warehouse"):
+                warehouse_address = frappe.db.get_value(
+                    "Dynamic Link",
+                    {
+                        "parenttype": "Address",
+                        "link_doctype": "Warehouse",
+                        "link_name": stock_settings.get("default_warehouse"),
+                    },
+                    "parent",
+                )
+                frappe.log_error(
+                    f"Warehouse address not found {warehouse_address}",
+                )
+                if warehouse_address:
+                    so.shipping_address_name = warehouse_address
 
 
 def create_sales_order(shopify_order, setting, company=None):
     customer = setting.default_customer
+
     if shopify_order.get("customer", {}):
         if customer_id := shopify_order.get("customer", {}).get("id"):
             customer = frappe.db.get_value("Customer", {CUSTOMER_ID_FIELD: customer_id}, "name")
@@ -106,10 +177,10 @@ def create_sales_order(shopify_order, setting, company=None):
             message += "\n" + ", ".join(product_not_exists)
 
             create_shopify_log(status="Error", exception=message, rollback=True)
-
             return ""
 
         taxes = get_order_taxes(shopify_order, setting, items)
+
         so = frappe.get_doc(
             {
                 "doctype": "Sales Order",
@@ -130,11 +201,13 @@ def create_sales_order(shopify_order, setting, company=None):
                 "tax_category": get_dummy_tax_category(),
             }
         )
-
+        # shipping_lines
         if company:
             so.update({"company": company, "status": "Draft"})
         so.flags.ignore_mandatory = True
         so.flags.shopiy_order_json = json.dumps(shopify_order)
+
+        update_warehouse_address(so, shopify_order)
         so.save(ignore_permissions=True)
         so.submit()
         if shopify_order.get("note"):
@@ -231,7 +304,7 @@ def get_order_taxes(shopify_order, setting, items):
 
     update_taxes_with_shipping_lines(
         taxes,
-        shopify_order.get("shipping_lines"),
+        shopify_order.get("shipping_lines", []),
         setting,
         items,
         taxes_inclusive=shopify_order.get("taxes_included"),
