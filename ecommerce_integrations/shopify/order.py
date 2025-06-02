@@ -108,7 +108,11 @@ def get_pickup_locations():
         "X-Shopify-Access-Token": settings.get_password("password"),
     }
 
-    response = requests.post(f"https://{settings.shopify_url}", headers=headers, json=payload)
+    response = requests.post(
+        f"https://{settings.shopify_url}/admin/api/2025-04/graphql.json",
+        headers=headers,
+        json=payload,
+    )
     frappe.log_error("location api response", frappe.utils.cstr(response.text))
 
     if response.status_code == 200:
