@@ -32,8 +32,9 @@ def get():
     items.append("my item 2")
 
     bin_data = frappe.db.sql(
-        f"select item_code, reserved_qty,actual_qty from `tabBin` where item_code in {tuple(items)} ",
+        f"select item_code, SUM(reserved_qty) as reserved_qty, SUM(actual_qty) as actual_qty from `tabBin` where item_code in {tuple(items)} group by item_code ",
         as_dict=True,
+        debug=True
     )
     item_wise_bin_data = {}
     for bin in bin_data:
