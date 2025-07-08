@@ -13,7 +13,7 @@ def link_shopify_customers():
     if not ACCESS_TOKEN:
         return
 
-    API_URL = f"https://{settings.get("shopify_url")}/admin/api/2025-04/graphql.json"
+    API_URL = f'https://{settings.get("shopify_url")}/admin/api/2025-04/graphql.json'
     headers = {
         "Content-Type": "application/json",
         "X-Shopify-Access-Token": ACCESS_TOKEN,
