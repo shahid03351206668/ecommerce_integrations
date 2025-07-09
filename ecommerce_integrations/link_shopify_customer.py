@@ -34,12 +34,13 @@ def link_shopify_customers():
         variables = {"searchQuery": f"email:{customer_email}"}
         payload = {"query": graphql_query, "variables": variables}
         response = requests.post(API_URL, headers=headers, json=payload)
-        frappe.log_error("customer api response", str(response.text))
         data = response.json().get("data", {}).get("customers").get("nodes", [])
 
         for i in data:
             shopify_id = str(i.get("id", "")).split("/")[-1]
+
             if i.get("email") == customer_email and shopify_id:
                 frappe.db.set_value(
                     "Customer", {"email_id": customer_email}, {"shopify_customer_id": shopify_id}
                 )
+                frappe.db.commit()
