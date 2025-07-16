@@ -3,8 +3,9 @@ from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_ent
 
 
 def main():
+
     unpaid_invoices = frappe.db.sql(
-    """ 
+    f""" 
         SELECT 
             DISTINCT si.name as invoice
         FROM `tabSales Order` so 
@@ -13,6 +14,7 @@ def main():
         WHERE  outstanding_amount > 0
         AND si.docstatus = 1
         AND so.custom_payment_status = 'Paid'
+        AND so.transaction_date = '{frappe.utils.getdate()}'
     """,
         as_dict=True,
     )
