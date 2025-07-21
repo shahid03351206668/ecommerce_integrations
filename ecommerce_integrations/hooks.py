@@ -126,7 +126,9 @@ doc_events = {
         "on_submit": "ecommerce_integrations.unicommerce.grn.upload_grn",
         "on_cancel": "ecommerce_integrations.unicommerce.grn.prevent_grn_cancel",
     },
-    "Item Price": {"on_change": "ecommerce_integrations.utils.price_list.discard_item_prices"},
+    "Item Price": {
+        "on_change": "ecommerce_integrations.utils.price_list.discard_item_prices"
+    },
     "Pick List": {"validate": "ecommerce_integrations.unicommerce.pick_list.validate"},
     "Sales Invoice": {
         "on_submit": "ecommerce_integrations.unicommerce.invoice.on_submit",
@@ -143,7 +145,6 @@ scheduler_events = {
     "daily_long": [
         "ecommerce_integrations.zenoti.doctype.zenoti_settings.zenoti_settings.sync_stocks",
         "ecommerce_integrations.link_shopify_customer.link_shopify_customers",
-        "ecommerce_integrations.payment_entry_job.main",
     ],
     "hourly": [
         "ecommerce_integrations.shopify.order.sync_old_orders",
@@ -158,7 +159,9 @@ scheduler_events = {
     "weekly": [],
     "monthly": [],
     "cron": {
-        # Every five minutes
+        "0 23 * * *": [
+            "ecommerce_integrations.payment_entry_job.main",
+        ],
         "*/5 * * * *": [
             "ecommerce_integrations.unicommerce.order.sync_new_orders",
             "ecommerce_integrations.unicommerce.inventory.update_inventory_on_unicommerce",
