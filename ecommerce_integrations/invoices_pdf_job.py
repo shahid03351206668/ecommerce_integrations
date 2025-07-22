@@ -10,7 +10,7 @@ import mimetypes
 
 def main():
     posted_invoices = frappe.db.sql(
-        "SELECT name FROM `tabSales Invoice` WHERE docstatus = 1 and name NOT IN (SELECT f.attached_to_name FROM `tabFile` f WHERE f.file_type = 'PDF' and f.attached_to_doctype = 'Sales Invoice')",
+        "SELECT name, shopify_order_id FROM `tabSales Invoice` WHERE docstatus = 1 and name NOT IN (SELECT f.attached_to_name FROM `tabFile` f WHERE f.file_type = 'PDF' and f.attached_to_doctype = 'Sales Invoice')",
         as_dict=True,
     )
 
@@ -27,7 +27,7 @@ def main():
             pdf_data = get_pdf(html)
 
             file = save_file(
-                fname=invoice.get("name"),
+                fname=invoice.get("shopify_order_id"),
                 content=pdf_data,
                 dt="Sales Invoice",
                 dn=invoice.name,
