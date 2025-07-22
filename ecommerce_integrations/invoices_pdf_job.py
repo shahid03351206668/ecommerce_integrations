@@ -27,7 +27,7 @@ def main():
             pdf_data = get_pdf(html)
 
             file = save_file(
-                fname=invoice.get("shopify_order_id"),
+                fname=invoice.get("shopify_order_id") + ".pdf",
                 content=pdf_data,
                 dt="Sales Invoice",
                 dn=invoice.name,
