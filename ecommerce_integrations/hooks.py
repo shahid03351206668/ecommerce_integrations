@@ -145,6 +145,8 @@ scheduler_events = {
     "daily_long": [
         "ecommerce_integrations.zenoti.doctype.zenoti_settings.zenoti_settings.sync_stocks",
         "ecommerce_integrations.link_shopify_customer.link_shopify_customers",
+        "ecommerce_integrations.invoices_pdf_job.main",
+        "ecommerce_integrations.invoices_pdf_job.sync_to_aws", 
     ],
     "hourly": [
         "ecommerce_integrations.shopify.order.sync_old_orders",
