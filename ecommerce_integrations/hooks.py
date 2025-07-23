@@ -131,7 +131,10 @@ doc_events = {
     },
     "Pick List": {"validate": "ecommerce_integrations.unicommerce.pick_list.validate"},
     "Sales Invoice": {
-        "on_submit": "ecommerce_integrations.unicommerce.invoice.on_submit",
+        "on_submit": [
+            "ecommerce_integrations.unicommerce.invoice.on_submit",
+            "ecommerce_integrations.invoices_pdf_job.sales_invoice_on_submit",
+        ],
         "on_cancel": "ecommerce_integrations.unicommerce.invoice.on_cancel",
     },
 }
@@ -146,7 +149,7 @@ scheduler_events = {
         "ecommerce_integrations.zenoti.doctype.zenoti_settings.zenoti_settings.sync_stocks",
         "ecommerce_integrations.link_shopify_customer.link_shopify_customers",
         "ecommerce_integrations.invoices_pdf_job.main",
-        "ecommerce_integrations.invoices_pdf_job.sync_to_aws", 
+        "ecommerce_integrations.invoices_pdf_job.sync_to_aws",
     ],
     "hourly": [
         "ecommerce_integrations.shopify.order.sync_old_orders",

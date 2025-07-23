@@ -8,13 +8,40 @@ from botocore.exceptions import ClientError, NoCredentialsError
 import mimetypes
 
 
+def sales_invoice_on_submit(self, method=None):
+    try:
+        print_format = "Virima SI"
+        html = frappe.get_print(
+            "Sales Invoice",
+            self.name,
+            print_format,
+            doc=self,
+        )
+        pdf_data = get_pdf(html)
+
+        file = save_file(
+            fname=self.get("shopify_order_id") + ".pdf",
+            content=pdf_data,
+            dt="Sales Invoice",
+            dn=self.name,
+            decode=False,
+            is_private=True,
+        )
+        file.save()
+    except Exception as e:
+        frappe.log_error(
+            f"Error generating PDF for Sales Invoice {self.name}: {str(e)}",
+            "Sales Invoice PDF Generation Error",
+        )
+
+
 def main():
     posted_invoices = frappe.db.sql(
         "SELECT name, shopify_order_id FROM `tabSales Invoice` WHERE docstatus = 1 and name NOT IN (SELECT f.attached_to_name FROM `tabFile` f WHERE f.file_type = 'PDF' and f.attached_to_doctype = 'Sales Invoice')",
         as_dict=True,
     )
 
-    print_format = "Tax Invoice"
+    print_format = "Virima SI"
     for invoice in posted_invoices:
         try:
             doc = frappe.get_doc("Sales Invoice", invoice.name)
