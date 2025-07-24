@@ -114,10 +114,11 @@ def sync_to_aws():
                     failed_uploads += 1
                     continue
 
-                if file_doc.attached_to_doctype and file_doc.attached_to_name:
-                    s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.attached_to_name.replace(' ', '_')}/{file_doc.file_name}"
-                else:
-                    s3_key = f"pdfs/unattached/{file_doc.file_name}"
+                s3_key = f"pdfs/{file_doc.file_name}"
+                # if file_doc.attached_to_doctype and file_doc.attached_to_name:
+                #     s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.attached_to_name.replace(' ', '_')}/{file_doc.file_name}"
+                # else:
+                #     s3_key = f"pdfs/unattached/{file_doc.file_name}"
                 try:
                     conn.head_object(Bucket=bucket, Key=s3_key)
                     skipped_uploads += 1
@@ -144,18 +145,12 @@ def sync_to_aws():
                 conn.upload_file(
                     Filename=file_path, Bucket=bucket, Key=s3_key, ExtraArgs=extra_args
                 )
-
                 successful_uploads += 1
 
-                # s3_url = f"https://{bucket}.s3.amazonaws.com/{s3_key}"
-                # frappe.db.set_value("File", file_doc.name, "s3_url", s3_url)
-
             except ClientError as e:
-                error_msg = f"AWS Error uploading {file_doc.file_name}: {e}"
                 failed_uploads += 1
 
             except Exception as e:
-                error_msg = f"Error uploading {file_doc.file_name}: {str(e)}"
                 failed_uploads += 1
 
         total_files = len(files)
