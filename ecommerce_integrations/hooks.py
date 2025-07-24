@@ -150,7 +150,7 @@ scheduler_events = {
         "ecommerce_integrations.link_shopify_customer.link_shopify_customers",
         "ecommerce_integrations.invoices_pdf_job.main",
         "ecommerce_integrations.invoices_pdf_job.sync_to_aws",
-        "ecommerce_integrations.payment_entry_job.run_for_selected_invoices",
+        # "ecommerce_integrations.payment_entry_job.run_for_selected_invoices",
     ],
     "hourly": [
         "ecommerce_integrations.shopify.order.sync_old_orders",

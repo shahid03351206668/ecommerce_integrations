@@ -2,7 +2,7 @@ import frappe
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 
 
-def run_for_selected_invoices():
+def run_for_selectted_invoices():
     invoices = [
         "R-2025-10231",
         "R-2025-10230",
