@@ -9,6 +9,9 @@ import mimetypes
 
 
 def sales_invoice_on_submit(self, method=None):
+    if self.status != "Paid":
+        return
+
     try:
         print_format = "Virima SI"
         html = frappe.get_print(
@@ -115,10 +118,9 @@ def sync_to_aws():
                     continue
 
                 s3_key = f"pdfs/{file_doc.file_name}"
-                # if file_doc.attached_to_doctype and file_doc.attached_to_name:
-                #     s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.attached_to_name.replace(' ', '_')}/{file_doc.file_name}"
-                # else:
-                #     s3_key = f"pdfs/unattached/{file_doc.file_name}"
+                if file_doc.attached_to_doctype and file_doc.attached_to_name:
+                    s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.file_name}"
+
                 try:
                     conn.head_object(Bucket=bucket, Key=s3_key)
                     skipped_uploads += 1
