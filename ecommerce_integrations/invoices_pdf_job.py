@@ -84,10 +84,11 @@ def sync_to_aws():
             aws_access_key_id=doc.access_key_id,
             aws_secret_access_key=doc.get_password("secret_access_key"),
             endpoint_url=doc.endpoint_url or "https://s3.amazonaws.com",
-            region_name="us-east-1",
+            region_name="eu-central-2",
         )
 
-        bucket = "virima-dokumentenarchiv"
+        # bucket = "virima-dokumentenarchiv"
+        bucket = "virima-erpnext-archiv"
         files = frappe.db.sql(
             """
             SELECT name, file_name, file_url, attached_to_doctype, attached_to_name, 
@@ -117,9 +118,14 @@ def sync_to_aws():
                     failed_uploads += 1
                     continue
 
-                s3_key = f"pdfs/{file_doc.file_name}"
                 if file_doc.attached_to_doctype and file_doc.attached_to_name:
-                    s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.file_name}"
+                    s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.attached_to_name.replace(' ', '_')}/{file_doc.file_name}"
+                else:
+                    s3_key = f"pdfs/unattached/{file_doc.file_name}"
+                # s3_key = f"pdfs/{file_doc.file_name}"
+
+                # if file_doc.attached_to_doctype and file_doc.attached_to_name:
+                #     s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.file_name}"
 
                 try:
                     conn.head_object(Bucket=bucket, Key=s3_key)
