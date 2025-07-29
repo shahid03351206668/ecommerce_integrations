@@ -97,6 +97,7 @@ def sync_to_aws():
             WHERE file_type = 'PDF' 
             AND file_url IS NOT NULL 
             AND file_url != ''
+            AND attached_to_doctype != 'Communication'
             ORDER BY creation DESC
         """,
             as_dict=True,
@@ -123,7 +124,6 @@ def sync_to_aws():
                 else:
                     s3_key = f"pdfs/unattached/{file_doc.file_name}"
                 # s3_key = f"pdfs/{file_doc.file_name}"
-
                 # if file_doc.attached_to_doctype and file_doc.attached_to_name:
                 #     s3_key = f"pdfs/{file_doc.attached_to_doctype.replace(' ', '_')}/{file_doc.file_name}"
 
