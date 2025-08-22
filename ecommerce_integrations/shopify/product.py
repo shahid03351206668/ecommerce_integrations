@@ -1,12 +1,15 @@
 from typing import Optional
 
 import frappe
+import shopify
+from shopify.resources import Product, Variant
 from frappe import _, msgprint
 from frappe.utils import cint, cstr
 from frappe.utils.nestedset import get_root_of
-from shopify.resources import Product, Variant
 
-from ecommerce_integrations.ecommerce_integrations.doctype.ecommerce_item import ecommerce_item
+from ecommerce_integrations.ecommerce_integrations.doctype.ecommerce_item import (
+    ecommerce_item,
+)
 from ecommerce_integrations.shopify.connection import temp_shopify_session
 from ecommerce_integrations.shopify.constants import (
     ITEM_SELLING_RATE_FIELD,
@@ -34,7 +37,9 @@ class ShopifyProduct:
         self.setting = frappe.get_doc(SETTING_DOCTYPE)
 
         if not self.setting.is_enabled():
-            frappe.throw(_("Can not create Shopify product when integration is disabled."))
+            frappe.throw(
+                _("Can not create Shopify product when integration is disabled.")
+            )
 
     def is_synced(self) -> bool:
         return ecommerce_item.is_synced(
@@ -122,7 +127,8 @@ class ShopifyProduct:
                 for d in item_attr.item_attribute_values
             ):
                 item_attr.append(
-                    "item_attribute_values", {"attribute_value": attr_value, "abbr": attr_value}
+                    "item_attribute_values",
+                    {"attribute_value": attr_value, "abbr": attr_value},
                 )
 
     def _create_item(
@@ -131,7 +137,8 @@ class ShopifyProduct:
         item_dict = {
             "variant_of": variant_of,
             "is_stock_item": 1,
-            "item_code": cstr(product_dict.get("item_code")) or cstr(product_dict.get("id")),
+            "item_code": cstr(product_dict.get("item_code"))
+            or cstr(product_dict.get("id")),
             "item_name": product_dict.get("title", "").strip(),
             "description": product_dict.get("body_html") or product_dict.get("title"),
             "item_group": self._get_item_group(product_dict.get("product_type")),
@@ -147,7 +154,9 @@ class ShopifyProduct:
         }
 
         integration_item_code = product_dict["id"]  # shopify product_id
-        variant_id = product_dict.get("variant_id", "")  # shopify variant_id if has variants
+        variant_id = product_dict.get(
+            "variant_id", ""
+        )  # shopify variant_id if has variants
         sku = item_dict["sku"]
 
         if not _match_sku_and_link_item(
@@ -178,7 +187,9 @@ class ShopifyProduct:
                     "id": product_dict.get("id"),
                     "variant_id": variant.get("id"),
                     "item_code": variant.get("id"),
-                    "title": product_dict.get("title", "").strip() + "-" + variant.get("title"),
+                    "title": product_dict.get("title", "").strip()
+                    + "-"
+                    + variant.get("title"),
                     "product_type": product_dict.get("product_type"),
                     "sku": variant.get("sku"),
                     "uom": template_item.stock_uom or _("Nos"),
@@ -207,7 +218,11 @@ class ShopifyProduct:
             (attribute["attribute"], variant_attr_val, variant_attr_val),
             as_list=1,
         )
-        return attribute_value[0][0] if len(attribute_value) > 0 else cint(variant_attr_val)
+        return (
+            attribute_value[0][0]
+            if len(attribute_value) > 0
+            else cint(variant_attr_val)
+        )
 
     def _get_item_group(self, product_type=None):
         parent_item_group = get_root_of("Item Group")
@@ -264,7 +279,10 @@ class ShopifyProduct:
         supplier_group = frappe.db.get_value("Supplier Group", _("Shopify Supplier"))
         if not supplier_group:
             supplier_group = frappe.get_doc(
-                {"doctype": "Supplier Group", "supplier_group_name": _("Shopify Supplier")}
+                {
+                    "doctype": "Supplier Group",
+                    "supplier_group_name": _("Shopify Supplier"),
+                }
             ).insert()
             return supplier_group.name
         return supplier_group
@@ -329,7 +347,6 @@ def _match_sku_and_link_item(
 def create_items_if_not_exist(order):
     """Using shopify order, sync all items that are not already synced."""
     for item in order.get("line_items", []):
-
         product_id = item["product_id"]
         variant_id = item.get("variant_id")
         sku = item.get("sku")
@@ -379,7 +396,9 @@ def upload_erpnext_item(doc, method=None):
 
     if len(item.attributes) > 3:
         msgprint(
-            _("Template items/Items with 4 or more attributes can not be uploaded to Shopify.")
+            _(
+                "Template items/Items with 4 or more attributes can not be uploaded to Shopify."
+            )
         )
         return
 
@@ -434,7 +453,9 @@ def upload_erpnext_item(doc, method=None):
                         }
                     )
                     try:
-                        variant_attributes[f"option{i+1}"] = item.attributes[i].attribute_value
+                        variant_attributes[f"option{i + 1}"] = item.attributes[
+                            i
+                        ].attribute_value
                     except IndexError:
                         frappe.throw(
                             _("Shopify Error: Missing value for attribute {}").format(
@@ -453,7 +474,9 @@ def upload_erpnext_item(doc, method=None):
                         "erpnext_item_code": d.name,
                         "integration": MODULE_NAME,
                         "integration_item_code": str(product.id),
-                        "variant_id": "" if d.has_variants else str(product.variants[0].id),
+                        "variant_id": ""
+                        if d.has_variants
+                        else str(product.variants[0].id),
                         "sku": "" if d.has_variants else str(product.variants[0].sku),
                         "has_variants": d.has_variants,
                         "variant_of": d.variant_of,
@@ -465,7 +488,9 @@ def upload_erpnext_item(doc, method=None):
     elif setting.update_shopify_item_on_update:
         product = Product.find(product_id)
         if product:
-            map_erpnext_item_to_shopify(shopify_product=product, erpnext_item=template_item)
+            map_erpnext_item_to_shopify(
+                shopify_product=product, erpnext_item=template_item
+            )
             if not item.variant_of:
                 update_default_variant_properties(
                     product,
@@ -492,7 +517,9 @@ def upload_erpnext_item(doc, method=None):
                         }
                     )
                     try:
-                        variant_attributes[f"option{i+1}"] = item.attributes[i].attribute_value
+                        variant_attributes[f"option{i + 1}"] = item.attributes[
+                            i
+                        ].attribute_value
                     except IndexError:
                         frappe.throw(
                             _("Shopify Error: Missing value for attribute {}").format(
@@ -503,9 +530,131 @@ def upload_erpnext_item(doc, method=None):
 
             is_successful = product.save()
             if is_successful and item.variant_of:
-                map_erpnext_variant_to_shopify_variant(product, item, variant_attributes)
+                map_erpnext_variant_to_shopify_variant(
+                    product, item, variant_attributes
+                )
 
-            write_upload_log(status=is_successful, product=product, item=item, action="Updated")
+            write_upload_log(
+                status=is_successful, product=product, item=item, action="Updated"
+            )
+
+
+def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
+    meta_fields_maps = [
+        {
+            "namespace": "custom",
+            "key": "zubereitung_oder_anwendung",
+            "type": "single_line_text",
+            "erpnext_field": "custom_zubereitung_oder_anwendung",
+        },
+        {
+            "namespace": "custom",
+            "key": "zutaten",
+            "type": "multi_line_text",
+            "erpnext_field": "custom_zutaten",
+        },
+        {
+            "namespace": "custom",
+            "key": "anwendung_zubereitung",
+            "type": "multi_line_text",
+            "erpnext_field": "custom_zubereitunganwendung",
+        },
+        {
+            "namespace": "custom",
+            "key": "salz",
+            "type": "number_decimal",
+            "erpnext_field": "custom_salt",
+        },
+        {
+            "namespace": "custom",
+            "key": "eiweiss",
+            "type": "number_decimal",
+            "erpnext_field": "custom_protein",
+        },
+        {
+            "namespace": "custom",
+            "key": "davon_zucker",
+            "type": "number_decimal",
+            "erpnext_field": "custom_of_which_sugar",
+        },
+        {
+            "namespace": "custom",
+            "key": "kohlenhydrate",
+            "type": "number_decimal",
+            "erpnext_field": "custom_carbohydrates",
+        },
+        {
+            "namespace": "custom",
+            "key": "gesattigte_fettsauren",
+            "type": "number_decimal",
+            "erpnext_field": "custom_saturated_fats",
+        },
+        {
+            "namespace": "custom",
+            "key": "fett",
+            "type": "number_decimal",
+            "erpnext_field": "custom_fat",
+        },
+        {
+            "namespace": "custom",
+            "key": "kj",
+            "type": "number_integer",
+            "erpnext_field": "custom_kj",
+        },
+        {
+            "namespace": "custom",
+            "key": "kcal",
+            "type": "number_integer",
+            "erpnext_field": "custom_kcal",
+        },
+        {
+            "namespace": "custom",
+            "key": "ohne_palmol",
+            "type": "boolean",
+            "erpnext_field": "custom_without_palm_oil",
+        },
+        {
+            "namespace": "custom",
+            "key": "glutenfrei",
+            "type": "boolean",
+            "erpnext_field": "custom_glutenfree",
+        },
+        {
+            "namespace": "custom",
+            "key": "glutamatfrei_msg",
+            "type": "boolean",
+            "erpnext_field": "custom_glutamatefree_msg",
+        },
+        {
+            "namespace": "custom",
+            "key": "laktosefrei",
+            "type": "boolean",
+            "erpnext_field": "custom_lactosefree",
+        },
+    ]
+
+    for i in meta_fields_maps:
+        key = i.get("erpnext_field")
+
+        if not erpnext_item.get(key):
+            continue
+        
+        try:
+            shopify_product.add_metafield(
+                shopify.Metafield(
+                    {
+                        "namespace": "custom",
+                        "key": i.get("key"),
+                        "type": i.get("type"),
+                        "value": erpnext_item.get(key),
+                    }
+                )
+            )
+        except Exception as e:
+            frappe.log_error(
+                "Error while adding meta field",
+                str(e) + "\n\n" + frappe.get_traceback(),
+            )
 
 
 def map_erpnext_variant_to_shopify_variant(
@@ -548,6 +697,8 @@ def map_erpnext_item_to_shopify(shopify_product: Product, erpnext_item):
     shopify_product.title = erpnext_item.item_name
     shopify_product.body_html = erpnext_item.description
     shopify_product.product_type = erpnext_item.item_group
+
+    map_product_meta_fields(shopify_product, erpnext_item)
 
     if erpnext_item.weight_uom in WEIGHT_TO_ERPNEXT_UOM_MAP.values():
         # reverse lookup for key
@@ -593,7 +744,11 @@ def update_default_variant_properties(
 def write_upload_log(status: bool, product: Product, item, action="Created") -> None:
     if not status:
         msg = _("Failed to upload item to Shopify") + "<br>"
-        msg += _("Shopify reported errors:") + " " + ", ".join(product.errors.full_messages())
+        msg += (
+            _("Shopify reported errors:")
+            + " "
+            + ", ".join(product.errors.full_messages())
+        )
         msgprint(msg, title="Note", indicator="orange")
 
         create_shopify_log(

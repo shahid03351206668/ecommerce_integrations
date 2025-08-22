@@ -21,20 +21,48 @@ class ShopifyCustomer(EcommerceCustomer):
     def sync_customer(self, customer: Dict[str, Any]) -> None:
         """Create Customer in ERPNext using shopify's Customer dict."""
 
-        customer_name = cstr(customer.get("first_name")) + " " + cstr(customer.get("last_name"))
+        customer_name = (
+            cstr(customer.get("first_name")) + " " + cstr(customer.get("last_name"))
+        )
         if len(customer_name.strip()) == 0:
             customer_name = customer.get("email")
 
         customer_group = self.setting.customer_group
         super().sync_customer(customer_name, customer_group)
 
-        billing_address = customer.get("billing_address", {}) or customer.get("default_address")
+        billing_address = customer.get("billing_address", {}) or customer.get(
+            "default_address"
+        )
         shipping_address = customer.get("shipping_address", {})
 
         if billing_address:
-            self.create_customer_address(
-                customer_name, billing_address, address_type="Billing", email=customer.get("email")
-            )
+            """Create address from dictionary containing fields used in Address doctype of ERPNext."""
+
+            customer_doc = self.get_customer_doc()
+            address_doc = frappe.get_doc(
+                {
+                    "doctype": "Address",
+                    **_map_address_fields(
+                        billing_address, customer_name, "Billing", customer.get("email")
+                    ),
+                    "links": [
+                        {"link_doctype": "Customer", "link_name": customer_doc.name}
+                    ],
+                }
+            ).insert(ignore_mandatory=True)
+
+            try:
+                frappe.db.set_value(
+                    "Customer",
+                    customer_doc.name,
+                    {"customer_primary_address": address_doc.name},
+                )
+            except Exception as e:
+                frappe.log_error(
+                    "Shopify Development Error! ",
+                    str(e) + "\n\n\n" + frappe.get_traceback(),
+                )
+
         if shipping_address:
             self.create_customer_address(
                 customer_name,
@@ -53,20 +81,30 @@ class ShopifyCustomer(EcommerceCustomer):
         email: Optional[str] = None,
     ) -> None:
         """Create customer address(es) using Customer dict provided by shopify."""
-        address_fields = _map_address_fields(shopify_address, customer_name, address_type, email)
+        address_fields = _map_address_fields(
+            shopify_address, customer_name, address_type, email
+        )
         super().create_customer_address(address_fields)
 
     def update_existing_addresses(self, customer):
-        billing_address = customer.get("billing_address", {}) or customer.get("default_address")
+        billing_address = customer.get("billing_address", {}) or customer.get(
+            "default_address"
+        )
         shipping_address = customer.get("shipping_address", {})
 
-        customer_name = cstr(customer.get("first_name")) + " " + cstr(customer.get("last_name"))
+        customer_name = (
+            cstr(customer.get("first_name")) + " " + cstr(customer.get("last_name"))
+        )
         email = customer.get("email")
 
         if billing_address:
-            self._update_existing_address(customer_name, billing_address, "Billing", email)
+            self._update_existing_address(
+                customer_name, billing_address, "Billing", email
+            )
         if shipping_address:
-            self._update_existing_address(customer_name, shipping_address, "Shipping", email)
+            self._update_existing_address(
+                customer_name, shipping_address, "Shipping", email
+            )
 
     def _update_existing_address(
         self,
@@ -78,16 +116,21 @@ class ShopifyCustomer(EcommerceCustomer):
         old_address = self.get_customer_address_doc(address_type)
 
         if not old_address:
-            self.create_customer_address(customer_name, shopify_address, address_type, email)
+            self.create_customer_address(
+                customer_name, shopify_address, address_type, email
+            )
         else:
             exclude_in_update = ["address_title", "address_type"]
-            new_values = _map_address_fields(shopify_address, customer_name, address_type, email)
-            old_address.update({k: v for k, v in new_values.items() if k not in exclude_in_update})
+            new_values = _map_address_fields(
+                shopify_address, customer_name, address_type, email
+            )
+            old_address.update(
+                {k: v for k, v in new_values.items() if k not in exclude_in_update}
+            )
             old_address.flags.ignore_mandatory = True
             old_address.save()
 
     def create_customer_contact(self, shopify_customer: Dict[str, Any]) -> None:
-
         if not (shopify_customer.get("first_name") and shopify_customer.get("email")):
             return
 
@@ -108,7 +151,9 @@ class ShopifyCustomer(EcommerceCustomer):
         ).get("phone")
 
         if validate_phone_number(phone_no, throw=False):
-            contact_fields["phone_nos"] = [{"phone": phone_no, "is_primary_phone": True}]
+            contact_fields["phone_nos"] = [
+                {"phone": phone_no, "is_primary_phone": True}
+            ]
 
         super().create_customer_contact(contact_fields)
 
