@@ -57,6 +57,10 @@ class ShopifyCustomer(EcommerceCustomer):
                     customer_doc.name,
                     {"customer_primary_address": address_doc.name},
                 )
+                try:
+                    frappe.get_doc("Customer", customer_doc.name).save()
+                except Exception as e:
+                    ...
             except Exception as e:
                 frappe.log_error(
                     "Shopify Development Error! ",
