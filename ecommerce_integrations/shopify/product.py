@@ -538,8 +538,48 @@ def upload_erpnext_item(doc, method=None):
                 status=is_successful, product=product, item=item, action="Updated"
             )
 
+def map_erpnext_variant_to_shopify_variant(
+    shopify_product: Product, erpnext_item, variant_attributes
+):
+    variant_product_id = frappe.db.get_value(
+        "Ecommerce Item",
+        {"erpnext_item_code": erpnext_item.name, "integration": MODULE_NAME},
+        "integration_item_code",
+    )
+    if not variant_product_id:
+        for variant in shopify_product.variants:
+            if (
+                variant.option1 == variant_attributes.get("option1")
+                and variant.option2 == variant_attributes.get("option2")
+                and variant.option3 == variant_attributes.get("option3")
+            ):
+                variant_product_id = str(variant.id)
+                if not frappe.flags.in_test:
+                    frappe.get_doc(
+                        {
+                            "doctype": "Ecommerce Item",
+                            "erpnext_item_code": erpnext_item.name,
+                            "integration": MODULE_NAME,
+                            "integration_item_code": str(shopify_product.id),
+                            "variant_id": variant_product_id,
+                            "sku": str(variant.sku),
+                            "variant_of": erpnext_item.variant_of,
+                        }
+                    ).insert()
+                break
+        if not variant_product_id:
+            msgprint(_("Shopify: Couldn't sync item variant."))
+    return variant_product_id
 
-def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
+
+import re
+import frappe
+from frappe import _
+from frappe.utils import cstr
+
+def map_product_meta_fields(shopify_product, erpnext_item):
+    """Map ERPNext custom fields to Shopify metafields with improved error handling."""
+    
     meta_fields_maps = [
         {
             "namespace": "custom",
@@ -632,103 +672,280 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
             "erpnext_field": "custom_lactosefree",
         },
     ]
+    
     meta_fields_added = []
-    import re
+    meta_fields_errors = []
 
-    for i in meta_fields_maps:
-        key = i.get("erpnext_field")
-
-        value = erpnext_item.get(key)
-
-        if not value and i.get("type") != "boolean":
+    for field_map in meta_fields_maps:
+        erpnext_field = field_map.get("erpnext_field")
+        field_type = field_map.get("type")
+        shopify_key = field_map.get("key")
+        
+        # Get value from ERPNext item
+        raw_value = erpnext_item.get(erpnext_field)
+        
+        # Skip if no value and not boolean type (booleans can be False)
+        if raw_value is None and field_type != "boolean":
             continue
-
-        if key == "custom_zutaten" and cstr(value):
-            match = re.search(r"<p>(.*?)</p>", cstr(value))
-            if match:
-                value = cstr(match.group(1))
-
-        if key == "custom_zubereitunganwendung":
-            match = re.search(r"<p>(.*?)</p>", cstr(value))
-            if match:
-                value = cstr(match.group(1))
-
-        meta_fields_added.append({"key": key, "value": value})
+            
+        # Process the value based on field type
+        processed_value = process_metafield_value(raw_value, field_type, erpnext_field)
+        
+        # Skip if processed value is empty/invalid
+        if processed_value is None:
+            continue
+            
         try:
-            shopify_product.add_metafield(
-                shopify.Metafield(
-                    {
-                        "namespace": "custom",
-                        "key": i.get("key"),
-                        "type": i.get("type"),
-                        "value": value,
-                    }
-                )
-            )
+            # Create metafield object
+            metafield_data = {
+                "namespace": field_map.get("namespace"),
+                "key": shopify_key,
+                "type": field_type,
+                "value": processed_value,
+            }
+            
+            # Add metafield to product
+            shopify_product.add_metafield(shopify.Metafield(metafield_data))
+            
+            meta_fields_added.append({
+                "key": erpnext_field,
+                "shopify_key": shopify_key,
+                "value": processed_value,
+                "type": field_type
+            })
+            
         except Exception as e:
+            error_msg = f"Failed to add metafield {shopify_key}: {str(e)}"
+            meta_fields_errors.append({
+                "field": erpnext_field,
+                "shopify_key": shopify_key,
+                "error": str(e)
+            })
             frappe.log_error(
-                "Error while adding meta field",
-                str(e) + "\n\n" + frappe.get_traceback(),
+                f"Metafield Error - {shopify_key}",
+                f"{error_msg}\n\nField Map: {field_map}\nValue: {processed_value}\n\n{frappe.get_traceback()}"
             )
 
-    frappe.log_error("meta_fields_added", str(meta_fields_added))
+    # Log results
+    if meta_fields_added:
+        frappe.log_error("Metafields Successfully Added", frappe.as_json(meta_fields_added, indent=2))
+    
+    if meta_fields_errors:
+        frappe.log_error("Metafield Errors Summary", frappe.as_json(meta_fields_errors, indent=2))
 
 
-def map_erpnext_variant_to_shopify_variant(
-    shopify_product: Product, erpnext_item, variant_attributes
-):
-    variant_product_id = frappe.db.get_value(
-        "Ecommerce Item",
-        {"erpnext_item_code": erpnext_item.name, "integration": MODULE_NAME},
-        "integration_item_code",
-    )
-    if not variant_product_id:
-        for variant in shopify_product.variants:
-            if (
-                variant.option1 == variant_attributes.get("option1")
-                and variant.option2 == variant_attributes.get("option2")
-                and variant.option3 == variant_attributes.get("option3")
-            ):
-                variant_product_id = str(variant.id)
-                if not frappe.flags.in_test:
-                    frappe.get_doc(
-                        {
-                            "doctype": "Ecommerce Item",
-                            "erpnext_item_code": erpnext_item.name,
-                            "integration": MODULE_NAME,
-                            "integration_item_code": str(shopify_product.id),
-                            "variant_id": variant_product_id,
-                            "sku": str(variant.sku),
-                            "variant_of": erpnext_item.variant_of,
-                        }
-                    ).insert()
-                break
-        if not variant_product_id:
-            msgprint(_("Shopify: Couldn't sync item variant."))
-    return variant_product_id
+def process_metafield_value(raw_value, field_type, erpnext_field):
+    """Process and validate metafield values based on their type."""
+    
+    if raw_value is None:
+        return None if field_type != "boolean" else False
+    
+    # Handle HTML content extraction for specific fields
+    if erpnext_field in ["custom_zutaten", "custom_zubereitunganwendung"]:
+        if cstr(raw_value):
+            # Extract content from HTML paragraph tags
+            match = re.search(r"<p>(.*?)</p>", cstr(raw_value), re.DOTALL | re.IGNORECASE)
+            if match:
+                # Clean up the extracted content
+                extracted = match.group(1).strip()
+                # Remove any remaining HTML tags
+                clean_value = re.sub(r'<[^>]+>', '', extracted).strip()
+                return clean_value if clean_value else None
+            else:
+                # If no <p> tags, remove all HTML tags
+                clean_value = re.sub(r'<[^>]+>', '', cstr(raw_value)).strip()
+                return clean_value if clean_value else None
+        return None
+    
+    # Handle different field types
+    if field_type == "boolean":
+        # Convert to boolean, handling various truthy/falsy values
+        if isinstance(raw_value, bool):
+            return raw_value
+        if isinstance(raw_value, (int, float)):
+            return bool(raw_value)
+        if isinstance(raw_value, str):
+            return raw_value.lower() in ['true', '1', 'yes', 'on']
+        return bool(raw_value)
+    
+    elif field_type in ["number_decimal", "number_integer"]:
+        try:
+            if isinstance(raw_value, (int, float)):
+                return int(raw_value) if field_type == "number_integer" else float(raw_value)
+            
+            # Handle string numbers
+            value_str = cstr(raw_value).strip()
+            if not value_str:
+                return None
+                
+            # Remove any non-numeric characters except decimal point and minus
+            cleaned = re.sub(r'[^\d.-]', '', value_str)
+            if not cleaned or cleaned in ['-', '.', '-.']:
+                return None
+                
+            return int(float(cleaned)) if field_type == "number_integer" else float(cleaned)
+            
+        except (ValueError, TypeError):
+            frappe.log_error(
+                f"Invalid numeric value for {erpnext_field}",
+                f"Raw value: {raw_value}, Type: {type(raw_value)}"
+            )
+            return None
+    
+    elif field_type in ["single_line_text_field", "multi_line_text_field"]:
+        text_value = cstr(raw_value).strip()
+        return text_value if text_value else None
+    
+    # Default case
+    return cstr(raw_value).strip() if cstr(raw_value).strip() else None
 
 
-def map_erpnext_item_to_shopify(shopify_product: Product, erpnext_item):
-    """Map erpnext fields to shopify, called both when updating and creating new products."""
+def map_erpnext_item_to_shopify(shopify_product, erpnext_item):
+    """Map ERPNext fields to Shopify product with improved error handling and validation."""
+    
+    if not shopify_product or not erpnext_item:
+        frappe.throw(_("Invalid product or item data provided"))
+    
+    try:
+        # Map basic product information
+        if hasattr(erpnext_item, 'item_name') and erpnext_item.item_name:
+            shopify_product.title = cstr(erpnext_item.item_name).strip()
+        
+        if hasattr(erpnext_item, 'description') and erpnext_item.description:
+            shopify_product.body_html = cstr(erpnext_item.description)
+        
+        if hasattr(erpnext_item, 'item_group') and erpnext_item.item_group:
+            shopify_product.product_type = cstr(erpnext_item.item_group)
 
-    shopify_product.title = erpnext_item.item_name
-    shopify_product.body_html = erpnext_item.description
-    shopify_product.product_type = erpnext_item.item_group
+        # Map custom metafields
+        map_product_meta_fields(shopify_product, erpnext_item)
 
-    map_product_meta_fields(shopify_product, erpnext_item)
+        # Handle weight mapping
+        if (hasattr(erpnext_item, 'weight_uom') and 
+            hasattr(erpnext_item, 'weight_per_unit') and
+            erpnext_item.weight_uom and 
+            erpnext_item.weight_per_unit):
+            
+            try:
+                if erpnext_item.weight_uom in WEIGHT_TO_ERPNEXT_UOM_MAP.values():
+                    # Get Shopify weight UOM
+                    uom = get_shopify_weight_uom(erpnext_weight_uom=erpnext_item.weight_uom)
+                    if uom:
+                        shopify_product.weight = float(erpnext_item.weight_per_unit)
+                        shopify_product.weight_unit = uom
+            except (ValueError, TypeError) as e:
+                frappe.log_error(
+                    "Weight Mapping Error",
+                    f"Error mapping weight: {str(e)}\nWeight: {erpnext_item.weight_per_unit}\nUOM: {erpnext_item.weight_uom}"
+                )
 
-    if erpnext_item.weight_uom in WEIGHT_TO_ERPNEXT_UOM_MAP.values():
-        # reverse lookup for key
-        uom = get_shopify_weight_uom(erpnext_weight_uom=erpnext_item.weight_uom)
-        shopify_product.weight = erpnext_item.weight_per_unit
-        shopify_product.weight_unit = uom
+        # Handle product status
+        if hasattr(erpnext_item, 'disabled'):
+            if erpnext_item.disabled:
+                shopify_product.status = "draft"
+                shopify_product.published = False
+                frappe.msgprint(_("Status of linked Shopify product is changed to Draft."))
+            else:
+                # Optionally set to active if not disabled
+                shopify_product.status = "active"
+                shopify_product.published = True
 
-    if erpnext_item.disabled:
-        shopify_product.status = "draft"
-        shopify_product.published = False
-        msgprint(_("Status of linked Shopify product is changed to Draft."))
+        frappe.log_error(
+            "Product Mapping Completed",
+            f"Successfully mapped ERPNext item {erpnext_item.get('name', 'Unknown')} to Shopify product"
+        )
+
+    except Exception as e:
+        frappe.log_error(
+            "Product Mapping Error",
+            f"Error mapping ERPNext item to Shopify: {str(e)}\n\n{frappe.get_traceback()}"
+        )
+        frappe.throw(_("Failed to map product data: {0}").format(str(e)))
 
 
+def validate_shopify_product_data(shopify_product, erpnext_item):
+    """Validate the mapped Shopify product data before saving."""
+    
+    errors = []
+    
+    # Check required fields
+    if not getattr(shopify_product, 'title', None):
+        errors.append("Product title is required")
+    
+    # Validate weight if present
+    if hasattr(shopify_product, 'weight') and shopify_product.weight:
+        try:
+            weight = float(shopify_product.weight)
+            if weight < 0:
+                errors.append("Weight cannot be negative")
+        except (ValueError, TypeError):
+            errors.append("Invalid weight value")
+    
+    # Log validation results
+    if errors:
+        error_msg = "Product validation failed: " + "; ".join(errors)
+        frappe.log_error("Shopify Product Validation Error", error_msg)
+        return False, errors
+    
+    return True, []
+
+
+# Helper function to safely get metafield values
+def get_metafield_value(shopify_product, namespace, key):
+    """Safely retrieve metafield value from Shopify product."""
+    try:
+        if hasattr(shopify_product, 'metafields') and shopify_product.metafields:
+            for metafield in shopify_product.metafields:
+                if (getattr(metafield, 'namespace', None) == namespace and 
+                    getattr(metafield, 'key', None) == key):
+                    return getattr(metafield, 'value', None)
+    except Exception as e:
+        frappe.log_error(f"Error retrieving metafield {namespace}.{key}", str(e))
+    
+    return None
+
+
+# Usage example with error handling
+def update_shopify_product_safely(shopify_product, erpnext_item):
+    """Safely update Shopify product with comprehensive error handling."""
+    
+    try:
+        # Validate input data
+        if not shopify_product:
+            frappe.throw(_("Shopify product object is required"))
+        
+        if not erpnext_item:
+            frappe.throw(_("ERPNext item data is required"))
+        
+        # Map the data
+        map_erpnext_item_to_shopify(shopify_product, erpnext_item)
+        
+        # Validate the mapped data
+        is_valid, validation_errors = validate_shopify_product_data(shopify_product, erpnext_item)
+        
+        if not is_valid:
+            frappe.log_error("Product Validation Failed", "; ".join(validation_errors))
+            frappe.throw(_("Product validation failed: {0}").format("; ".join(validation_errors)))
+        
+        # Save the product
+        result = shopify_product.save()
+        
+        if result:
+            frappe.msgprint(_("Shopify product updated successfully"))
+            return True
+        else:
+            frappe.throw(_("Failed to save Shopify product"))
+            
+    except Exception as e:
+        frappe.log_error(
+            "Shopify Product Update Error",
+            f"Critical error updating Shopify product: {str(e)}\n\n{frappe.get_traceback()}"
+        )
+        frappe.throw(_("Failed to update Shopify product: {0}").format(str(e)))
+        
+    return False
+
+	
 def get_shopify_weight_uom(erpnext_weight_uom: str) -> str:
     for shopify_uom, erpnext_uom in WEIGHT_TO_ERPNEXT_UOM_MAP.items():
         if erpnext_uom == erpnext_weight_uom:
