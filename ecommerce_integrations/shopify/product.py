@@ -632,11 +632,12 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
             "erpnext_field": "custom_lactosefree",
         },
     ]
-
+    meta_fields_added = []
     for i in meta_fields_maps:
         key = i.get("erpnext_field")
-        
+
         print(key, erpnext_item.get(key))
+        meta_fields_added.append({"key": key, "value": erpnext_item.get(key)})
         if not erpnext_item.get(key):
             continue
 
@@ -656,6 +657,8 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
                 "Error while adding meta field",
                 str(e) + "\n\n" + frappe.get_traceback(),
             )
+
+    frappe.log_error("meta_fields_added", str(meta_fields_added))
 
 
 def map_erpnext_variant_to_shopify_variant(
