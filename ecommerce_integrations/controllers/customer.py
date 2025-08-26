@@ -14,12 +14,16 @@ class EcommerceCustomer:
     def is_synced(self) -> bool:
         """Check if customer on Ecommerce site is synced with ERPNext"""
 
-        return bool(frappe.db.exists("Customer", {self.customer_id_field: self.customer_id}))
+        return bool(
+            frappe.db.exists("Customer", {self.customer_id_field: self.customer_id})
+        )
 
     def get_customer_doc(self):
         """Get ERPNext customer document."""
         if self.is_synced():
-            return frappe.get_last_doc("Customer", {self.customer_id_field: self.customer_id})
+            return frappe.get_last_doc(
+                "Customer", {self.customer_id_field: self.customer_id}
+            )
         else:
             raise frappe.DoesNotExistError()
 

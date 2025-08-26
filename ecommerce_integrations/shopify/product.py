@@ -544,19 +544,19 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
         {
             "namespace": "custom",
             "key": "zubereitung_oder_anwendung",
-            "type": "single_line_text",
+            "type": "single_line_text_field",
             "erpnext_field": "custom_zubereitung_oder_anwendung",
         },
         {
             "namespace": "custom",
             "key": "zutaten",
-            "type": "multi_line_text",
+            "type": "multi_line_text_field",
             "erpnext_field": "custom_zutaten",
         },
         {
             "namespace": "custom",
             "key": "anwendung_zubereitung",
-            "type": "multi_line_text",
+            "type": "multi_line_text_field",
             "erpnext_field": "custom_zubereitunganwendung",
         },
         {
@@ -635,10 +635,11 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
 
     for i in meta_fields_maps:
         key = i.get("erpnext_field")
-
+        
+        print(key, erpnext_item.get(key))
         if not erpnext_item.get(key):
             continue
-        
+
         try:
             shopify_product.add_metafield(
                 shopify.Metafield(
