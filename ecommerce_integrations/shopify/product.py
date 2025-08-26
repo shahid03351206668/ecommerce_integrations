@@ -649,7 +649,7 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
             match = re.search(r"<p>(.*?)</p>", cstr(value))
             if match:
                 value = cstr(match.group(1))
-            ...
+
         if key == "custom_zubereitunganwendung":
             match = re.search(r"<p>(.*?)</p>", cstr(value))
             if match:
