@@ -638,11 +638,9 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
     for i in meta_fields_maps:
         key = i.get("erpnext_field")
 
-        print(key, erpnext_item.get(key))
-        meta_fields_added.append({"key": key, "value": erpnext_item.get(key)})
         value = erpnext_item.get(key)
 
-        if not value:
+        if not value and i.get("type") != "boolean":
             continue
 
         if key == "custom_zutaten" and cstr(value):
@@ -654,6 +652,8 @@ def map_product_meta_fields(shopify_product: Product, erpnext_item: dict):
             match = re.search(r"<p>(.*?)</p>", cstr(value))
             if match:
                 value = cstr(match.group(1))
+
+        meta_fields_added.append({"key": key, "value": value})
         try:
             shopify_product.add_metafield(
                 shopify.Metafield(
