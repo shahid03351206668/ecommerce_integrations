@@ -584,7 +584,7 @@ def map_product_meta_fields(shopify_product, erpnext_item):
         {
             "namespace": "custom",
             "key": "zubereitung_oder_anwendung",
-            "type": "single_line_text_field",
+            "type": "multi_line_text_field",
             "erpnext_field": "custom_zubereitung_oder_anwendung",
         },
         {
@@ -945,7 +945,7 @@ def update_shopify_product_safely(shopify_product, erpnext_item):
         
     return False
 
-	
+
 def get_shopify_weight_uom(erpnext_weight_uom: str) -> str:
     for shopify_uom, erpnext_uom in WEIGHT_TO_ERPNEXT_UOM_MAP.items():
         if erpnext_uom == erpnext_weight_uom:
