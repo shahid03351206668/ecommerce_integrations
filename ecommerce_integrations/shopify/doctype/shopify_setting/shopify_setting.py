@@ -160,7 +160,8 @@ def setup_custom_fields():
             dict(
                 fieldname=ORDER_ID_FIELD,
                 label="Shopify Order Id",
-                fieldtype="Small Text",
+                fieldtype="Data",
+                unique=1,
                 insert_after="title",
                 read_only=1,
                 print_hide=1,
@@ -229,8 +230,9 @@ def setup_custom_fields():
             dict(
                 fieldname=ORDER_ID_FIELD,
                 label="Shopify Order Id",
-                fieldtype="Small Text",
+                fieldtype="Data",
                 insert_after="title",
+                unique=1,
                 read_only=1,
                 print_hide=1,
             ),
