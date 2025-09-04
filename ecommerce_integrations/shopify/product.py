@@ -430,6 +430,7 @@ def upload_erpnext_item(doc, method=None):
                 sku=template_item.item_code,
                 price=template_item.get(ITEM_SELLING_RATE_FIELD),
                 is_stock_item=template_item.is_stock_item,
+                barcode=template_item.barcodes[0].barcode if template_item.barcodes else None,
             )
             if item.variant_of:
                 product.options = []
@@ -497,12 +498,14 @@ def upload_erpnext_item(doc, method=None):
                     product,
                     is_stock_item=template_item.is_stock_item,
                     price=item.get(ITEM_SELLING_RATE_FIELD),
+                    barcode=template_item.barcodes[0].barcode if template_item.barcodes else None,
                 )
             else:
                 variant_attributes = {
                     "sku": item.item_code,
                     "price": item.get(ITEM_SELLING_RATE_FIELD),
                 }
+
                 product.options = []
                 max_index_range = min(3, len(template_item.attributes))
                 for i in range(0, max_index_range):
@@ -832,8 +835,8 @@ def map_erpnext_item_to_shopify(shopify_product, erpnext_item):
         if erpnext_item.barcodes:
             barcode = erpnext_item.barcodes[0].barcode
 
-        if barcode:
-            shopify_product.barcode = barcode
+        # Remove: if barcode: shopify_product.barcode = barcode
+        # Instead, set barcode on default variant after product is saved (see below)
 
         # Map custom metafields
         map_product_meta_fields(shopify_product, erpnext_item)
@@ -860,18 +863,10 @@ def map_erpnext_item_to_shopify(shopify_product, erpnext_item):
                     f"Error mapping weight: {str(e)}\nWeight: {erpnext_item.weight_per_unit}\nUOM: {erpnext_item.weight_uom}",
                 )
 
-        # Handle product status
-        if hasattr(erpnext_item, "disabled"):
-            if erpnext_item.disabled:
-                shopify_product.status = "draft"
-                shopify_product.published = False
-                frappe.msgprint(
-                    _("Status of linked Shopify product is changed to Draft.")
-                )
-            else:
-                # Optionally set to active if not disabled
-                shopify_product.status = "active"
-                shopify_product.published = True
+        if erpnext_item.disabled:
+            shopify_product.status = "draft"
+            shopify_product.published = False
+            frappe.msgprint(_("Status of linked Shopify product is changed to Draft."))
 
         frappe.log_error(
             "Product Mapping Completed",
@@ -986,6 +981,7 @@ def update_default_variant_properties(
     is_stock_item: bool,
     sku: Optional[str] = None,
     price: Optional[float] = None,
+    barcode: Optional[str] = None,  # Add barcode argument
 ):
     """Shopify creates default variant upon saving the product.
 
@@ -1002,6 +998,8 @@ def update_default_variant_properties(
         default_variant.price = price
     if sku is not None:
         default_variant.sku = sku
+    if barcode is not None:
+        default_variant.barcode = barcode  # Set barcode on variant
 
 
 def write_upload_log(status: bool, product: Product, item, action="Created") -> None:
