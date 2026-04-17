@@ -667,6 +667,12 @@ def map_product_meta_fields(shopify_product, erpnext_item):
         },
         {
             "namespace": "custom",
+            "key": "vegan",
+            "type": "boolean",
+            "erpnext_field": "custom_vegan",
+        }
+        {
+            "namespace": "custom",
             "key": "glutamatfrei_msg",
             "type": "boolean",
             "erpnext_field": "custom_glutamatefree_msg",
