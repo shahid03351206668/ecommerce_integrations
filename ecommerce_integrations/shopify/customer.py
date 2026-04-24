@@ -165,7 +165,7 @@ class ShopifyCustomer(EcommerceCustomer):
 def _map_address_fields(shopify_address, customer_name, address_type, email):
     """returns dict with shopify address fields mapped to equivalent ERPNext fields"""
     address_fields = {
-        "address_title": customer_name,
+        "address_title": shopify_address.get("name"),
         "address_type": address_type,
         ADDRESS_ID_FIELD: shopify_address.get("id"),
         "address_line1": shopify_address.get("address1") or "Address 1",
