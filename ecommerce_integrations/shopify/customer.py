@@ -37,7 +37,6 @@ class ShopifyCustomer(EcommerceCustomer):
 
         if billing_address:
             """Create address from dictionary containing fields used in Address doctype of ERPNext."""
-
             customer_doc = self.get_customer_doc()
             address_doc = frappe.get_doc(
                 {
@@ -68,12 +67,25 @@ class ShopifyCustomer(EcommerceCustomer):
                 )
 
         if shipping_address:
-            self.create_customer_address(
-                customer_name,
-                shipping_address,
-                address_type="Shipping",
-                email=customer.get("email"),
-            )
+            customer_doc = self.get_customer_doc()
+            address_doc = frappe.get_doc(
+                {
+                    "doctype": "Address",
+                    **_map_address_fields(
+                        shipping_address, customer_name, "Shipping", customer.get("email")
+                    ),
+                    "links": [
+                        {"link_doctype": "Customer", "link_name": customer_doc.name}
+                    ],
+                }
+            ).insert(ignore_mandatory=True)
+
+            # self.create_customer_address(
+            #     customer_name,
+            #     shipping_address,
+            #     address_type="Shipping",
+            #     email=customer.get("email"),
+            # )
 
         self.create_customer_contact(customer)
 
