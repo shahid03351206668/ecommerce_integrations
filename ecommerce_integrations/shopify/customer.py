@@ -136,7 +136,7 @@ class ShopifyCustomer(EcommerceCustomer):
                 customer_name, shopify_address, address_type, email
             )
         else:
-            exclude_in_update = ["address_title", "address_type"]
+            exclude_in_update = ["address_type"]
             new_values = _map_address_fields(
                 shopify_address, customer_name, address_type, email
             )
