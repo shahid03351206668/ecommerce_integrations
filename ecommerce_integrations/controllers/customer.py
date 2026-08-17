@@ -40,7 +40,7 @@ class EcommerceCustomer:
                     "Selling Settings", "Selling Settings", "territory"
                 )
                 or get_root_of("Territory"),
-                "customer_type": _("Individual"),
+                "customer_type": "Individual",
             }
         )
 
